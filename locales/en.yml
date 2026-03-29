@@ -1,7 +1,10 @@
 en:
   theme_metadata:
-    description: 'Displays a customizable banner with optional hyperlink support (markdown
+    description:
+      "Displays a customizable banner with optional hyperlink support (markdown
       syntax), tailored to three user types: anonymous visitors, logged-in members,
-      and Insider group members.'
+      and Insider group members."
     settings:
-      example_setting: A description of a setting.
+      anonymous_banner_text: Supports markdown links e.g. Visit us [here](https://example.com)
+      member_banner_text: Supports markdown links e.g. Visit us [here](https://example.com)
+      insider_banner_text: Supports markdown links e.g. Visit us [here](https://example.com)

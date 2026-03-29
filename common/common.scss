@@ -1,0 +1,17 @@
+.user-type-banner {
+  grid-area: above-outlet;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  background-color: var(--tertiary-low);
+  color: var(--primary);
+  padding: 1em;
+  margin-bottom: 1em;
+  border-radius: var(--d-default-border-radius);
+
+  a {
+    color: var(--d-link-color);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}

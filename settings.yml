@@ -1,2 +1,11 @@
-example_setting:
-  default: true
+anonymous_banner_text:
+  type: string
+  default: ""
+
+member_banner_text:
+  type: string
+  default: ""
+
+insider_banner_text:
+  type: string
+  default: ""
