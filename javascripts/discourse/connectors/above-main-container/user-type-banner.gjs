@@ -1,9 +1,19 @@
 import Component from "@glimmer/component";
+import { tracked } from "@glimmer/tracking";
+import { action } from "@ember/object";
 import { service } from "@ember/service";
+import DButton from "discourse/components/d-button";
 import { eq } from "discourse/truth-helpers";
 
-// Matches a single markdown link: [text](url)
 const MARKDOWN_LINK_RE = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/;
+
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = Math.imul(31, hash) + str.charCodeAt(i) || 0;
+  }
+  return hash.toString(36);
+}
 
 function parseBannerText(raw) {
   if (!raw?.trim()) {
@@ -33,38 +43,91 @@ function parseBannerText(raw) {
   return segments;
 }
 
+const STORAGE_KEY_PREFIX = "discourse-user-banner-dismissed";
+
+function buildStorageKey(text) {
+  return `${STORAGE_KEY_PREFIX}-${simpleHash(text)}`;
+}
+
+function isDismissed(text) {
+  return localStorage.getItem(buildStorageKey(text)) === "1";
+}
+
+function markDismissed(text) {
+  localStorage.setItem(buildStorageKey(text), "1");
+}
+
 export default class UserTypeBanner extends Component {
   @service currentUser;
 
-  get segments() {
+  @tracked dismissed = false;
+
+  constructor(owner, args) {
+    super(owner, args);
+    const { isInsider, rawText } = this.#bannerMeta;
+    if (isInsider && settings.insider_banner_dismissable) {
+      this.dismissed = isDismissed(rawText);
+    }
+  }
+
+  get #bannerMeta() {
     const user = this.currentUser;
 
     if (!user) {
-      return parseBannerText(settings.anonymous_banner_text);
+      return { isInsider: false, rawText: settings.anonymous_banner_text };
     }
 
     const isInsider = user.groups?.some((g) => g.name === "insider");
-    const raw = isInsider
-      ? settings.insider_banner_text
-      : settings.member_banner_text;
+    return {
+      isInsider,
+      rawText: isInsider
+        ? settings.insider_banner_text
+        : settings.member_banner_text,
+    };
+  }
 
-    return parseBannerText(raw);
+  get segments() {
+    return parseBannerText(this.#bannerMeta.rawText);
+  }
+
+  get isDismissable() {
+    return this.#bannerMeta.isInsider && settings.insider_banner_dismissable;
+  }
+
+  get shouldShow() {
+    return this.segments.length > 0 && !this.dismissed;
+  }
+
+  @action
+  dismiss() {
+    markDismissed(this.#bannerMeta.rawText);
+    this.dismissed = true;
   }
 
   <template>
-    {{#if this.segments.length}}
+    {{#if this.shouldShow}}
       <div class="user-type-banner" role="banner">
-        {{#each this.segments as |segment|}}
-          {{#if (eq segment.type "link")}}
-            <a
-              href={{segment.url}}
-              target="_blank"
-              rel="noopener noreferrer"
-            >{{segment.text}}</a>
-          {{else}}
-            {{segment.value}}
-          {{/if}}
-        {{/each}}
+        <span class="user-type-banner__text">
+          {{#each this.segments as |segment|}}
+            {{#if (eq segment.type "link")}}
+              <a
+                href={{segment.url}}
+                target="_blank"
+                rel="noopener noreferrer"
+              >{{segment.text}}</a>
+            {{else}}
+              {{segment.value}}
+            {{/if}}
+          {{/each}}
+        </span>
+
+        {{#if this.isDismissable}}
+          <DButton
+            @action={{this.dismiss}}
+            @icon="xmark"
+            class="user-type-banner__dismiss btn-transparent"
+          />
+        {{/if}}
       </div>
     {{/if}}
   </template>

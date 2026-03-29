@@ -9,3 +9,7 @@ member_banner_text:
 insider_banner_text:
   type: string
   default: ""
+
+insider_banner_dismissable:
+  type: bool
+  default: true

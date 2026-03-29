@@ -14,4 +14,10 @@
     text-decoration: underline;
     cursor: pointer;
   }
+
+  &__dismiss.btn-transparent {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
 }

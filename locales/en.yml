@@ -8,3 +8,4 @@ en:
       anonymous_banner_text: Supports markdown links e.g. Visit us [here](https://example.com)
       member_banner_text: Supports markdown links e.g. Visit us [here](https://example.com)
       insider_banner_text: Supports markdown links e.g. Visit us [here](https://example.com)
+      insider_banner_dismissable: "Allow insider users to permanently dismiss their banner"
