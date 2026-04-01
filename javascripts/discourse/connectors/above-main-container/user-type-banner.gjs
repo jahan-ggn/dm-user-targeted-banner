@@ -5,6 +5,18 @@ import { service } from "@ember/service";
 import DButton from "discourse/components/d-button";
 import { eq } from "discourse/truth-helpers";
 
+export const ALL_PAGES_EXCLUDED_ROUTES = [
+  "account-created.edit-email",
+  "account-created.index",
+  "account-created.resent",
+  "activate-account",
+  "full-page-search",
+  "invites.show",
+  "login",
+  "password-reset",
+  "signup",
+];
+
 const MARKDOWN_LINK_RE = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/;
 
 function simpleHash(str) {
@@ -59,25 +71,32 @@ function markDismissed(text) {
 
 export default class UserTypeBanner extends Component {
   @service currentUser;
+  @service router;
 
   @tracked dismissed = false;
 
   constructor(owner, args) {
     super(owner, args);
-    const { isInsider, rawText } = this.#bannerMeta;
-    if (isInsider && settings.insider_banner_dismissable) {
-      this.dismissed = isDismissed(rawText);
+
+    const meta = this.bannerMeta;
+
+    if (meta.isInsider && settings.insider_banner_dismissable) {
+      this.dismissed = isDismissed(meta.rawText);
     }
   }
 
-  get #bannerMeta() {
+  get bannerMeta() {
     const user = this.currentUser;
 
     if (!user) {
-      return { isInsider: false, rawText: settings.anonymous_banner_text };
+      return {
+        isInsider: false,
+        rawText: settings.anonymous_banner_text,
+      };
     }
 
     const isInsider = user.groups?.some((g) => g.name === "insider");
+
     return {
       isInsider,
       rawText: isInsider
@@ -87,20 +106,31 @@ export default class UserTypeBanner extends Component {
   }
 
   get segments() {
-    return parseBannerText(this.#bannerMeta.rawText);
+    return parseBannerText(this.bannerMeta.rawText);
   }
 
   get isDismissable() {
-    return this.#bannerMeta.isInsider && settings.insider_banner_dismissable;
+    return this.bannerMeta.isInsider && settings.insider_banner_dismissable;
+  }
+
+  get isRouteAllowed() {
+    const currentRouteName = this.router.currentRouteName;
+
+    return (
+      !currentRouteName?.startsWith("admin") &&
+      !ALL_PAGES_EXCLUDED_ROUTES.some(
+        (routeName) => routeName === currentRouteName
+      )
+    );
   }
 
   get shouldShow() {
-    return this.segments.length > 0 && !this.dismissed;
+    return this.isRouteAllowed && this.segments.length > 0 && !this.dismissed;
   }
 
   @action
   dismiss() {
-    markDismissed(this.#bannerMeta.rawText);
+    markDismissed(this.bannerMeta.rawText);
     this.dismissed = true;
   }
 
@@ -110,11 +140,9 @@ export default class UserTypeBanner extends Component {
         <span class="user-type-banner__text">
           {{#each this.segments as |segment|}}
             {{#if (eq segment.type "link")}}
-              <a
-                href={{segment.url}}
-                target="_blank"
-                rel="noopener noreferrer"
-              >{{segment.text}}</a>
+              <a href={{segment.url}} target="_blank" rel="noopener noreferrer">
+                {{segment.text}}
+              </a>
             {{else}}
               {{segment.value}}
             {{/if}}
