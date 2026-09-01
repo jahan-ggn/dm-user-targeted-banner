@@ -2,8 +2,8 @@ import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
-import DButton from "discourse/components/d-button";
 import { eq } from "discourse/truth-helpers";
+import DButton from "discourse/ui-kit/d-button";
 
 export const ALL_PAGES_EXCLUDED_ROUTES = [
   "account-created.edit-email",
@@ -95,7 +95,7 @@ export default class UserTypeBanner extends Component {
       };
     }
 
-    const isInsider = user.groups?.some((g) => g.name === "insider");
+    const isInsider = settings.user_in_insider_groups;
 
     return {
       isInsider,

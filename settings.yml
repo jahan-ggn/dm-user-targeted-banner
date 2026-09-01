@@ -13,3 +13,9 @@ insider_banner_text:
 insider_banner_dismissable:
   type: bool
   default: true
+
+insider_groups:
+  default: ""
+  type: list
+  list_type: group
+  resolve_group_membership: true
